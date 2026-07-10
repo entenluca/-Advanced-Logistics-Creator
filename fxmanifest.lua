@@ -44,6 +44,7 @@ files {
     'ui/js/dnd.js',
     'ui/js/app.js',
     'locales/*.json',
+    'sql/migrate_v2.sql',
 }
 
 dependencies {

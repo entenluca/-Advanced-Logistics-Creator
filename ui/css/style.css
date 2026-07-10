@@ -709,10 +709,6 @@ body[data-theme="light"] {
     --shadow: 0 24px 48px rgba(0, 0, 0, 0.12);
 }
 
-body[data-theme="light"] #app {
-    background: rgba(240, 244, 248, 0.85);
-}
-
 body[data-theme="light"] input,
 body[data-theme="light"] select,
 body[data-theme="light"] textarea {
