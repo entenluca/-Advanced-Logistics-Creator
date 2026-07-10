@@ -6,6 +6,7 @@ local placementCallback = nil
 RegisterNUICallback('startPlacement', function(payload, cb)
     placementActive = true
     placementCallback = payload.placementType or 'point'
+    SendNUIMessage({ action = 'placementStart' })
     SetNuiFocus(false, false)
     Bridge.Notify('Position mit [E] bestätigen, [BACKSPACE] abbrechen', 'inform')
     cb('ok')
@@ -29,7 +30,8 @@ CreateThread(function()
                 placementActive = false
                 SetNuiFocus(true, true)
                 SendNUIMessage({
-                    action = 'placementResult',
+                    action = 'placementEnd',
+                    subAction = 'placementResult',
                     coords = {
                         x = math.floor(coords.x * 100) / 100,
                         y = math.floor(coords.y * 100) / 100,
@@ -42,7 +44,7 @@ CreateThread(function()
             elseif IsControlJustPressed(0, 177) then -- BACKSPACE
                 placementActive = false
                 SetNuiFocus(true, true)
-                SendNUIMessage({ action = 'placementCancelled' })
+                SendNUIMessage({ action = 'placementEnd', subAction = 'placementCancelled' })
                 placementCallback = nil
             end
             Wait(0)

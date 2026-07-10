@@ -25,6 +25,8 @@ const state = {
     onlinePlayers: [],
 };
 
+let placementScrollTop = 0;
+
 const ORDER_TYPE_ICONS = {
     pallet: 'box',
     container: 'container',
@@ -308,6 +310,18 @@ function renderJobCategoryChips() {
     $('#jobCategories').innerHTML = chips
         .map((chip) => `<button type="button" class="chip ${state.jobCategoryFilter === chip.id ? 'active' : ''}" data-category="${chip.id}">${esc(chip.label)}</button>`)
         .join('');
+}
+
+function hideUIForPlacement() {
+    const content = $('.content');
+    placementScrollTop = content ? content.scrollTop : 0;
+    $('#app').classList.add('hidden');
+}
+
+function showUIAfterPlacement() {
+    $('#app').classList.remove('hidden');
+    const content = $('.content');
+    if (content) content.scrollTop = placementScrollTop;
 }
 
 function setActiveTab(tabId) {
@@ -1641,10 +1655,23 @@ window.addEventListener('message', async (event) => {
             $('#app').classList.remove('hidden');
             await loadData();
             break;
+        case 'placementStart':
+            hideUIForPlacement();
+            break;
+        case 'placementEnd':
+            showUIAfterPlacement();
+            if (payload.subAction === 'placementResult') {
+                applyPlacement(payload.coords, payload.type);
+            } else {
+                state.placementTarget = null;
+            }
+            break;
         case 'placementResult':
+            showUIAfterPlacement();
             applyPlacement(payload.coords, payload.type);
             break;
         case 'placementCancelled':
+            showUIAfterPlacement();
             state.placementTarget = null;
             break;
         case 'toast':
