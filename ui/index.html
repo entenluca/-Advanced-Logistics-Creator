@@ -5,71 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advanced Logistics Creator</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="app" class="hidden">
         <div class="panel">
             <header class="header">
                 <div class="header-left">
-                    <span class="logo">🚚</span>
+                    <div class="icon-box" id="headerLogo"></div>
                     <div>
                         <h1>Advanced Logistics Creator</h1>
                         <p class="subtitle">Logistik-Jobs verwalten</p>
                     </div>
                 </div>
-                <button class="btn-close" id="btnClose" title="Schließen">✕</button>
+                <button class="btn-close" id="btnClose" title="Schließen"></button>
             </header>
 
             <nav class="tabs">
-                <button class="tab active" data-tab="jobs">📋 Jobs</button>
-                <button class="tab" data-tab="orders">📦 Aufträge</button>
-                <button class="tab" data-tab="routes">🗺️ Routen</button>
-                <button class="tab" data-tab="vehicles">🚛 Fahrzeuge</button>
-                <button class="tab" data-tab="payout">💰 Gehalt</button>
+                <button class="tab active" data-tab="jobs" data-icon="clipboard"><span>Jobs</span></button>
+                <button class="tab" data-tab="orders" data-icon="package"><span>Aufträge</span></button>
+                <button class="tab" data-tab="routes" data-icon="map"><span>Routen</span></button>
+                <button class="tab" data-tab="vehicles" data-icon="truck"><span>Fahrzeuge</span></button>
+                <button class="tab" data-tab="payout" data-icon="dollar"><span>Gehalt</span></button>
             </nav>
 
             <main class="content">
-                <!-- Jobs Tab -->
                 <section id="tab-jobs" class="tab-content active">
                     <div class="toolbar">
-                        <h2>Job-Verwaltung</h2>
-                        <button class="btn btn-primary" id="btnNewJob">+ Neuer Job</button>
+                        <h2 id="toolbarJobs"></h2>
+                        <button class="btn btn-primary" id="btnNewJob"></button>
                     </div>
                     <div class="list" id="jobList"></div>
                     <div class="form-panel hidden" id="jobForm">
-                        <h3 id="jobFormTitle">Neuer Logistik-Job</h3>
+                        <h3 id="jobFormTitle"></h3>
                         <div class="form-grid">
                             <label>Jobname<input type="text" id="jobName" placeholder="z.B. LS Haulage Co."></label>
                             <label>Beschreibung<textarea id="jobDescription" rows="2" placeholder="Beschreibung des Jobs"></textarea></label>
-                            <label>Icon
-                                <select id="jobIcon"></select>
-                            </label>
+                            <label>Icon<select id="jobIcon" class="icon-select"></select></label>
                             <label>Mindestlevel<input type="number" id="jobMinLevel" min="0" value="0"></label>
                             <label class="checkbox-label"><input type="checkbox" id="jobFactionBound"> Fraktionsgebunden</label>
                             <label id="factionField" class="hidden">Fraktion<input type="text" id="jobFaction" placeholder="Fraktionsname"></label>
                             <label class="checkbox-label"><input type="checkbox" id="jobActive" checked> Aktiv</label>
                         </div>
                         <div class="form-actions">
-                            <button class="btn btn-secondary" id="btnCancelJob">Abbrechen</button>
-                            <button class="btn btn-primary" id="btnSaveJob">Speichern</button>
+                            <button class="btn btn-secondary" id="btnCancelJob"></button>
+                            <button class="btn btn-primary" id="btnSaveJob"></button>
                         </div>
                     </div>
                 </section>
 
-                <!-- Orders Tab -->
                 <section id="tab-orders" class="tab-content">
                     <div class="toolbar">
-                        <h2>Auftrags-System</h2>
+                        <h2 id="toolbarOrders"></h2>
                         <div class="toolbar-right">
                             <select id="orderJobFilter"><option value="">Alle Jobs</option></select>
-                            <button class="btn btn-primary" id="btnNewOrder">+ Neuer Auftrag</button>
+                            <button class="btn btn-primary" id="btnNewOrder"></button>
                         </div>
                     </div>
                     <div class="list" id="orderList"></div>
                     <div class="form-panel hidden" id="orderForm">
-                        <h3 id="orderFormTitle">Neuer Auftrag</h3>
+                        <h3 id="orderFormTitle"></h3>
                         <div class="form-grid">
                             <label>Job<select id="orderJobId"></select></label>
                             <label>Auftragstyp<select id="orderType"></select></label>
@@ -81,7 +75,7 @@
                                     <input type="number" id="orderStartX" placeholder="X" step="0.01">
                                     <input type="number" id="orderStartY" placeholder="Y" step="0.01">
                                     <input type="number" id="orderStartZ" placeholder="Z" step="0.01">
-                                    <button class="btn btn-sm" data-placement="orderStart">📍 Setzen</button>
+                                    <button class="btn btn-sm btn-ghost" data-placement="orderStart" id="btnPlaceOrderStart"></button>
                                 </div>
                             </div>
                             <div class="coords-group">
@@ -90,7 +84,7 @@
                                     <input type="number" id="orderEndX" placeholder="X" step="0.01">
                                     <input type="number" id="orderEndY" placeholder="Y" step="0.01">
                                     <input type="number" id="orderEndZ" placeholder="Z" step="0.01">
-                                    <button class="btn btn-sm" data-placement="orderEnd">📍 Setzen</button>
+                                    <button class="btn btn-sm btn-ghost" data-placement="orderEnd" id="btnPlaceOrderEnd"></button>
                                 </div>
                             </div>
                             <label>Zeitlimit (Sek.)<input type="number" id="orderTimeLimit" min="0" value="0"></label>
@@ -101,24 +95,23 @@
                             <label class="checkbox-label"><input type="checkbox" id="orderActive" checked> Aktiv</label>
                         </div>
                         <div class="form-actions">
-                            <button class="btn btn-secondary" id="btnCancelOrder">Abbrechen</button>
-                            <button class="btn btn-primary" id="btnSaveOrder">Speichern</button>
+                            <button class="btn btn-secondary" id="btnCancelOrder"></button>
+                            <button class="btn btn-primary" id="btnSaveOrder"></button>
                         </div>
                     </div>
                 </section>
 
-                <!-- Routes Tab -->
                 <section id="tab-routes" class="tab-content">
                     <div class="toolbar">
-                        <h2>Routen-System</h2>
+                        <h2 id="toolbarRoutes"></h2>
                         <div class="toolbar-right">
                             <select id="routeOrderFilter"><option value="">Alle Aufträge</option></select>
-                            <button class="btn btn-primary" id="btnNewRoute">+ Neue Route</button>
+                            <button class="btn btn-primary" id="btnNewRoute"></button>
                         </div>
                     </div>
                     <div class="list" id="routeList"></div>
                     <div class="form-panel hidden" id="routeForm">
-                        <h3 id="routeFormTitle">Neue Route</h3>
+                        <h3 id="routeFormTitle"></h3>
                         <div class="form-grid">
                             <label>Auftrag<select id="routeOrderId"></select></label>
                             <label>Routenname<input type="text" id="routeName" placeholder="Route A"></label>
@@ -128,7 +121,7 @@
                                     <input type="number" id="routeStartX" placeholder="X" step="0.01">
                                     <input type="number" id="routeStartY" placeholder="Y" step="0.01">
                                     <input type="number" id="routeStartZ" placeholder="Z" step="0.01">
-                                    <button class="btn btn-sm" data-placement="routeStart">📍 Setzen</button>
+                                    <button class="btn btn-sm btn-ghost" data-placement="routeStart" id="btnPlaceRouteStart"></button>
                                 </div>
                             </div>
                             <div class="coords-group">
@@ -137,7 +130,7 @@
                                     <input type="number" id="routeEndX" placeholder="X" step="0.01">
                                     <input type="number" id="routeEndY" placeholder="Y" step="0.01">
                                     <input type="number" id="routeEndZ" placeholder="Z" step="0.01">
-                                    <button class="btn btn-sm" data-placement="routeEnd">📍 Setzen</button>
+                                    <button class="btn btn-sm btn-ghost" data-placement="routeEnd" id="btnPlaceRouteEnd"></button>
                                 </div>
                             </div>
                             <label>Schwierigkeit<select id="routeDifficulty"></select></label>
@@ -150,31 +143,30 @@
                         </div>
                         <div class="waypoints-section">
                             <div class="toolbar">
-                                <h4>Zwischenstopps</h4>
-                                <button class="btn btn-sm" id="btnAddWaypoint">+ Wegpunkt</button>
+                                <h4 id="waypointsTitle"></h4>
+                                <button class="btn btn-sm btn-secondary" id="btnAddWaypoint"></button>
                             </div>
                             <div id="waypointList"></div>
                         </div>
                         <div class="form-actions">
-                            <button class="btn btn-secondary" id="btnPreviewRoute">Vorschau</button>
-                            <button class="btn btn-secondary" id="btnCancelRoute">Abbrechen</button>
-                            <button class="btn btn-primary" id="btnSaveRoute">Speichern</button>
+                            <button class="btn btn-secondary" id="btnPreviewRoute"></button>
+                            <button class="btn btn-secondary" id="btnCancelRoute"></button>
+                            <button class="btn btn-primary" id="btnSaveRoute"></button>
                         </div>
                     </div>
                 </section>
 
-                <!-- Vehicles Tab -->
                 <section id="tab-vehicles" class="tab-content">
                     <div class="toolbar">
-                        <h2>Fahrzeug-Management</h2>
+                        <h2 id="toolbarVehicles"></h2>
                         <div class="toolbar-right">
                             <select id="vehicleJobFilter"><option value="">Alle Jobs</option></select>
-                            <button class="btn btn-primary" id="btnNewVehicle">+ Fahrzeugspawn</button>
+                            <button class="btn btn-primary" id="btnNewVehicle"></button>
                         </div>
                     </div>
                     <div class="list" id="vehicleList"></div>
                     <div class="form-panel hidden" id="vehicleForm">
-                        <h3 id="vehicleFormTitle">Neuer Fahrzeugspawn</h3>
+                        <h3 id="vehicleFormTitle"></h3>
                         <div class="form-grid">
                             <label>Job<select id="vehicleJobId"></select></label>
                             <label>Fahrzeugmodell<input type="text" id="vehicleModel" placeholder="z.B. phantom"></label>
@@ -186,27 +178,26 @@
                                     <input type="number" id="vehicleY" placeholder="Y" step="0.01">
                                     <input type="number" id="vehicleZ" placeholder="Z" step="0.01">
                                     <input type="number" id="vehicleHeading" placeholder="Heading" step="0.01">
-                                    <button class="btn btn-sm" data-placement="vehicle">📍 Setzen</button>
+                                    <button class="btn btn-sm btn-ghost" data-placement="vehicle" id="btnPlaceVehicle"></button>
                                 </div>
                             </div>
                             <label>Livery<input type="number" id="vehicleLivery" value="-1"></label>
                             <label class="checkbox-label"><input type="checkbox" id="vehicleActive" checked> Aktiv</label>
                         </div>
                         <div class="form-actions">
-                            <button class="btn btn-secondary" id="btnCancelVehicle">Abbrechen</button>
-                            <button class="btn btn-primary" id="btnSaveVehicle">Speichern</button>
+                            <button class="btn btn-secondary" id="btnCancelVehicle"></button>
+                            <button class="btn btn-primary" id="btnSaveVehicle"></button>
                         </div>
                     </div>
                 </section>
 
-                <!-- Payout Tab -->
                 <section id="tab-payout" class="tab-content">
                     <div class="toolbar">
-                        <h2>Gehalts- und Belohnungssystem</h2>
+                        <h2 id="toolbarPayout"></h2>
                         <select id="payoutJobSelect"><option value="">Job auswählen...</option></select>
                     </div>
                     <div id="payoutPanel" class="form-panel">
-                        <p class="hint">Wähle einen Job aus, um das Gehaltssystem zu konfigurieren.</p>
+                        <p class="hint" id="payoutHint"></p>
                         <div class="form-grid hidden" id="payoutForm">
                             <label>Grundgehalt ($)<input type="number" id="payBase" min="0" value="500"></label>
                             <label>Auszahlung pro KM ($)<input type="number" id="payPerKm" min="0" value="25"></label>
@@ -217,17 +208,18 @@
                             <label>XP-Belohnung<input type="number" id="payXp" min="0" value="50"></label>
                         </div>
                         <div class="payout-preview hidden" id="payoutPreview">
-                            <h4>Beispielberechnung</h4>
+                            <h4 id="payoutPreviewTitle"></h4>
                             <div class="preview-calc" id="payoutCalc"></div>
                         </div>
                         <div class="form-actions hidden" id="payoutActions">
-                            <button class="btn btn-primary" id="btnSavePayout">Gehalt speichern</button>
+                            <button class="btn btn-primary" id="btnSavePayout"></button>
                         </div>
                     </div>
                 </section>
             </main>
         </div>
     </div>
+    <script src="js/icons.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

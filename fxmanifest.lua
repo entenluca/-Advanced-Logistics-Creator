@@ -34,6 +34,7 @@ ui_page 'ui/index.html'
 files {
     'ui/index.html',
     'ui/css/style.css',
+    'ui/js/icons.js',
     'ui/js/app.js',
     'locales/*.json',
 }

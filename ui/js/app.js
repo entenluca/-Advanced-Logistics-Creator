@@ -9,6 +9,17 @@ const state = {
     placementTarget: null,
 };
 
+const ORDER_TYPE_ICONS = {
+    pallet: 'box',
+    container: 'container',
+    tanker: 'droplet',
+    construction: 'hammer',
+    food: 'apple',
+    hazmat: 'biohazard',
+    special: 'star',
+    custom: 'edit',
+};
+
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
 
@@ -23,6 +34,83 @@ function nui(event, data = {}) {
 function notify(message, type = 'inform') {
     nui('notify', { message, type });
 }
+
+function setBtn(el, iconName, label) {
+    if (!el) return;
+    el.innerHTML = iconBtn(iconName, label);
+}
+
+function setTitle(el, iconName, label) {
+    if (!el) return;
+    el.innerHTML = `${icon(iconName)} ${label}`;
+}
+
+function emptyState(iconName, text) {
+    return `<div class="empty-state">${icon(iconName, 'icon-xl')}<p>${text}</p></div>`;
+}
+
+function actionBtn(iconName, label, onclick, extraClass = 'btn-secondary') {
+    return `<button class="btn btn-sm ${extraClass}" onclick="${onclick}">${iconBtn(iconName, label)}</button>`;
+}
+
+function badge(active) {
+    const cls = active ? 'badge-active' : 'badge-inactive';
+    const label = active ? 'Aktiv' : 'Inaktiv';
+    const ic = active ? 'check' : 'x';
+    return `<span class="badge ${cls}">${icon(ic)} ${label}</span>`;
+}
+
+function jobIcon(name) {
+    return ICONS[name] ? name : 'truck';
+}
+
+// --- Static UI init ---
+
+function initStaticUI() {
+    $('#headerLogo').innerHTML = icon('truck');
+    $('#btnClose').innerHTML = icon('x');
+
+    $$('.tab').forEach((tab) => {
+        const ic = tab.dataset.icon;
+        const label = tab.querySelector('span')?.textContent || '';
+        tab.innerHTML = `${icon(ic)}<span>${label}</span>`;
+    });
+
+    setTitle($('#toolbarJobs'), 'clipboard', 'Job-Verwaltung');
+    setTitle($('#toolbarOrders'), 'package', 'Auftrags-System');
+    setTitle($('#toolbarRoutes'), 'map', 'Routen-System');
+    setTitle($('#toolbarVehicles'), 'truck', 'Fahrzeug-Management');
+    setTitle($('#toolbarPayout'), 'dollar', 'Gehalts- und Belohnungssystem');
+    setTitle($('#waypointsTitle'), 'route', 'Zwischenstopps');
+
+    setBtn($('#btnNewJob'), 'plus', 'Neuer Job');
+    setBtn($('#btnNewOrder'), 'plus', 'Neuer Auftrag');
+    setBtn($('#btnNewRoute'), 'plus', 'Neue Route');
+    setBtn($('#btnNewVehicle'), 'plus', 'Fahrzeugspawn');
+    setBtn($('#btnAddWaypoint'), 'plus', 'Wegpunkt');
+
+    setBtn($('#btnPlaceOrderStart'), 'mapPin', 'Setzen');
+    setBtn($('#btnPlaceOrderEnd'), 'mapPin', 'Setzen');
+    setBtn($('#btnPlaceRouteStart'), 'mapPin', 'Setzen');
+    setBtn($('#btnPlaceRouteEnd'), 'mapPin', 'Setzen');
+    setBtn($('#btnPlaceVehicle'), 'mapPin', 'Setzen');
+
+    setBtn($('#btnCancelJob'), 'x', 'Abbrechen');
+    setBtn($('#btnSaveJob'), 'check', 'Speichern');
+    setBtn($('#btnCancelOrder'), 'x', 'Abbrechen');
+    setBtn($('#btnSaveOrder'), 'check', 'Speichern');
+    setBtn($('#btnPreviewRoute'), 'eye', 'Vorschau');
+    setBtn($('#btnCancelRoute'), 'x', 'Abbrechen');
+    setBtn($('#btnSaveRoute'), 'check', 'Speichern');
+    setBtn($('#btnCancelVehicle'), 'x', 'Abbrechen');
+    setBtn($('#btnSaveVehicle'), 'check', 'Speichern');
+    setBtn($('#btnSavePayout'), 'check', 'Gehalt speichern');
+
+    $('#payoutHint').innerHTML = `${icon('layers')} Wähle einen Job aus, um das Gehaltssystem zu konfigurieren.`;
+    setTitle($('#payoutPreviewTitle'), 'dollar', 'Beispielberechnung');
+}
+
+document.addEventListener('DOMContentLoaded', initStaticUI);
 
 // --- Init ---
 
@@ -76,7 +164,7 @@ $$('.tab').forEach((tab) => {
 // --- Populate selects ---
 
 function populateSelects() {
-    const jobOpts = state.jobs.map((j) => `<option value="${j.id}">${j.name}</option>`).join('');
+    const jobOpts = state.jobs.map((j) => `<option value="${j.id}">${esc(j.name)}</option>`).join('');
     ['orderJobFilter', 'orderJobId', 'vehicleJobFilter', 'vehicleJobId', 'payoutJobSelect'].forEach((id) => {
         const el = $(`#${id}`);
         const isFilter = id.includes('Filter') || id === 'payoutJobSelect';
@@ -85,7 +173,7 @@ function populateSelects() {
 
     const orderOpts = state.orders.map((o) => {
         const job = state.jobs.find((j) => j.id === o.job_id);
-        return `<option value="${o.id}">${o.title} (${job?.name || '?'})</option>`;
+        return `<option value="${o.id}">${esc(o.title)} (${esc(job?.name || '?')})</option>`;
     }).join('');
     ['routeOrderFilter', 'routeOrderId'].forEach((id) => {
         const el = $(`#${id}`);
@@ -96,10 +184,10 @@ function populateSelects() {
         $('#jobIcon').innerHTML = state.config.icons.map((i) => `<option value="${i}">${i}</option>`).join('');
     }
     if (state.config.orderTypes) {
-        $('#orderType').innerHTML = state.config.orderTypes.map((t) => `<option value="${t.id}">${t.label}</option>`).join('');
+        $('#orderType').innerHTML = state.config.orderTypes.map((t) => `<option value="${t.id}">${esc(t.label)}</option>`).join('');
     }
     if (state.config.difficulties) {
-        $('#routeDifficulty').innerHTML = state.config.difficulties.map((d) => `<option value="${d.id}">${d.label}</option>`).join('');
+        $('#routeDifficulty').innerHTML = state.config.difficulties.map((d) => `<option value="${d.id}">${esc(d.label)}</option>`).join('');
     }
 }
 
@@ -115,18 +203,25 @@ function renderAll() {
 function renderJobs() {
     const list = $('#jobList');
     if (!state.jobs.length) {
-        list.innerHTML = '<div class="empty-state">Noch keine Jobs erstellt. Klicke auf „Neuer Job".</div>';
+        list.innerHTML = emptyState('clipboard', 'Noch keine Jobs erstellt. Klicke auf „Neuer Job".');
         return;
     }
     list.innerHTML = state.jobs.map((j) => `
         <div class="list-item" data-id="${j.id}">
-            <div class="list-item-info">
-                <h4>${esc(j.name)} <span class="badge ${j.active ? 'badge-active' : 'badge-inactive'}">${j.active ? 'Aktiv' : 'Inaktiv'}</span></h4>
-                <p>${esc(j.description || 'Keine Beschreibung')} · Level ${j.min_level}${j.faction_bound ? ' · Fraktion: ' + esc(j.faction_name || '?') : ' · Öffentlich'}</p>
+            <div class="list-item-icon">${icon(jobIcon(j.icon))}</div>
+            <div class="list-item-body">
+                <div class="list-item-info">
+                    <h4>${esc(j.name)} ${badge(j.active)}</h4>
+                    <p>
+                        <span class="meta-chip">${icon('layers')} Level ${j.min_level}</span>
+                        <span class="meta-chip">${icon(j.faction_bound ? 'users' : 'check')} ${j.faction_bound ? 'Fraktion: ' + esc(j.faction_name || '?') : 'Öffentlich'}</span>
+                    </p>
+                    <p>${esc(j.description || 'Keine Beschreibung')}</p>
+                </div>
             </div>
             <div class="list-item-actions">
-                <button class="btn btn-sm btn-secondary" onclick="editJob(${j.id})">Bearbeiten</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteJob(${j.id})">Löschen</button>
+                ${actionBtn('pencil', 'Bearbeiten', `editJob(${j.id})`)}
+                ${actionBtn('trash', 'Löschen', `deleteJob(${j.id})`, 'btn-danger')}
             </div>
         </div>
     `).join('');
@@ -134,7 +229,7 @@ function renderJobs() {
 
 $('#btnNewJob').addEventListener('click', () => {
     state.editing.job = null;
-    $('#jobFormTitle').textContent = 'Neuer Logistik-Job';
+    setTitle($('#jobFormTitle'), 'plus', 'Neuer Logistik-Job');
     $('#jobName').value = '';
     $('#jobDescription').value = '';
     $('#jobMinLevel').value = '0';
@@ -177,7 +272,7 @@ window.editJob = (id) => {
     const job = state.jobs.find((j) => j.id === id);
     if (!job) return;
     state.editing.job = job;
-    $('#jobFormTitle').textContent = 'Job bearbeiten';
+    setTitle($('#jobFormTitle'), 'pencil', 'Job bearbeiten');
     $('#jobName').value = job.name;
     $('#jobDescription').value = job.description || '';
     $('#jobIcon').value = job.icon || 'truck';
@@ -201,22 +296,30 @@ function renderOrders() {
     const orders = filter ? state.orders.filter((o) => o.job_id == filter) : state.orders;
     const list = $('#orderList');
     if (!orders.length) {
-        list.innerHTML = '<div class="empty-state">Noch keine Aufträge erstellt.</div>';
+        list.innerHTML = emptyState('package', 'Noch keine Aufträge erstellt.');
         return;
     }
     const typeMap = {};
     (state.config.orderTypes || []).forEach((t) => { typeMap[t.id] = t.label; });
     list.innerHTML = orders.map((o) => {
         const job = state.jobs.find((j) => j.id === o.job_id);
+        const typeIcon = ORDER_TYPE_ICONS[o.order_type] || 'box';
         return `
         <div class="list-item">
-            <div class="list-item-info">
-                <h4>${esc(o.title)} <span class="badge ${o.active ? 'badge-active' : 'badge-inactive'}">${o.active ? 'Aktiv' : 'Inaktiv'}</span></h4>
-                <p>${typeMap[o.order_type] || o.order_type} · ${esc(job?.name || '?')} · ${o.reward}$ Belohnung</p>
+            <div class="list-item-icon">${icon(typeIcon)}</div>
+            <div class="list-item-body">
+                <div class="list-item-info">
+                    <h4>${esc(o.title)} ${badge(o.active)}</h4>
+                    <p>
+                        <span class="meta-chip">${icon(typeIcon)} ${esc(typeMap[o.order_type] || o.order_type)}</span>
+                        <span class="meta-chip">${icon('clipboard')} ${esc(job?.name || '?')}</span>
+                        <span class="meta-chip">${icon('dollar')} ${o.reward}$</span>
+                    </p>
+                </div>
             </div>
             <div class="list-item-actions">
-                <button class="btn btn-sm btn-secondary" onclick="editOrder(${o.id})">Bearbeiten</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteOrder(${o.id})">Löschen</button>
+                ${actionBtn('pencil', 'Bearbeiten', `editOrder(${o.id})`)}
+                ${actionBtn('trash', 'Löschen', `deleteOrder(${o.id})`, 'btn-danger')}
             </div>
         </div>`;
     }).join('');
@@ -226,7 +329,7 @@ $('#orderJobFilter').addEventListener('change', renderOrders);
 
 $('#btnNewOrder').addEventListener('click', () => {
     state.editing.order = null;
-    $('#orderFormTitle').textContent = 'Neuer Auftrag';
+    setTitle($('#orderFormTitle'), 'plus', 'Neuer Auftrag');
     ['orderTitle', 'orderDescription', 'orderStartX', 'orderStartY', 'orderStartZ', 'orderEndX', 'orderEndY', 'orderEndZ'].forEach((id) => { $(`#${id}`).value = ''; });
     $('#orderTimeLimit').value = '0';
     $('#orderReward').value = '0';
@@ -264,7 +367,7 @@ window.editOrder = (id) => {
     const o = state.orders.find((x) => x.id === id);
     if (!o) return;
     state.editing.order = o;
-    $('#orderFormTitle').textContent = 'Auftrag bearbeiten';
+    setTitle($('#orderFormTitle'), 'pencil', 'Auftrag bearbeiten');
     $('#orderJobId').value = o.job_id;
     $('#orderType').value = o.order_type;
     $('#orderTitle').value = o.title;
@@ -296,20 +399,28 @@ function renderRoutes() {
     const routes = filter ? state.routes.filter((r) => r.order_id == filter) : state.routes;
     const list = $('#routeList');
     if (!routes.length) {
-        list.innerHTML = '<div class="empty-state">Noch keine Routen erstellt.</div>';
+        list.innerHTML = emptyState('map', 'Noch keine Routen erstellt.');
         return;
     }
     list.innerHTML = routes.map((r) => {
         const order = state.orders.find((o) => o.id === r.order_id);
         return `
         <div class="list-item">
-            <div class="list-item-info">
-                <h4>${esc(r.name)} <span class="badge ${r.active ? 'badge-active' : 'badge-inactive'}">${r.active ? 'Aktiv' : 'Inaktiv'}</span></h4>
-                <p>${esc(order?.title || '?')} · ${r.distance} km · ${r.difficulty}${r.gps_enabled ? ' · GPS' : ''}</p>
+            <div class="list-item-icon">${icon('route')}</div>
+            <div class="list-item-body">
+                <div class="list-item-info">
+                    <h4>${esc(r.name)} ${badge(r.active)}</h4>
+                    <p>
+                        <span class="meta-chip">${icon('package')} ${esc(order?.title || '?')}</span>
+                        <span class="meta-chip">${icon('map')} ${r.distance} km</span>
+                        <span class="meta-chip">${icon('layers')} ${r.difficulty}</span>
+                        ${r.gps_enabled ? `<span class="meta-chip">${icon('mapPin')} GPS</span>` : ''}
+                    </p>
+                </div>
             </div>
             <div class="list-item-actions">
-                <button class="btn btn-sm btn-secondary" onclick="editRoute(${r.id})">Bearbeiten</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteRoute(${r.id})">Löschen</button>
+                ${actionBtn('pencil', 'Bearbeiten', `editRoute(${r.id})`)}
+                ${actionBtn('trash', 'Löschen', `deleteRoute(${r.id})`, 'btn-danger')}
             </div>
         </div>`;
     }).join('');
@@ -320,7 +431,7 @@ $('#routeOrderFilter').addEventListener('change', renderRoutes);
 $('#btnNewRoute').addEventListener('click', () => {
     state.editing.route = null;
     state.waypoints = [];
-    $('#routeFormTitle').textContent = 'Neue Route';
+    setTitle($('#routeFormTitle'), 'plus', 'Neue Route');
     $('#routeName').value = '';
     ['routeStartX', 'routeStartY', 'routeStartZ', 'routeEndX', 'routeEndY', 'routeEndZ'].forEach((id) => { $(`#${id}`).value = ''; });
     $('#routeDistance').value = '0';
@@ -371,7 +482,7 @@ window.editRoute = (id) => {
     if (!r) return;
     state.editing.route = r;
     state.waypoints = r.waypoints || [];
-    $('#routeFormTitle').textContent = 'Route bearbeiten';
+    setTitle($('#routeFormTitle'), 'pencil', 'Route bearbeiten');
     $('#routeOrderId').value = r.order_id;
     $('#routeName').value = r.name;
     $('#routeStartX').value = r.start_point?.x || '';
@@ -401,12 +512,12 @@ window.deleteRoute = async (id) => {
 function renderWaypoints() {
     $('#waypointList').innerHTML = state.waypoints.map((wp, i) => `
         <div class="waypoint-item">
-            <span>#${i + 1}</span>
+            <span class="wp-num">${i + 1}</span>
             <input type="number" value="${wp.x}" placeholder="X" step="0.01" onchange="updateWp(${i},'x',this.value)">
             <input type="number" value="${wp.y}" placeholder="Y" step="0.01" onchange="updateWp(${i},'y',this.value)">
             <input type="number" value="${wp.z}" placeholder="Z" step="0.01" onchange="updateWp(${i},'z',this.value)">
-            <button class="btn btn-sm" onclick="placeWp(${i})">📍</button>
-            <button class="btn btn-sm btn-danger" onclick="removeWp(${i})">✕</button>
+            <button class="btn btn-sm btn-ghost" onclick="placeWp(${i})">${iconBtn('mapPin', '')}</button>
+            <button class="btn btn-sm btn-danger" onclick="removeWp(${i})">${icon('x')}</button>
         </div>
     `).join('');
 }
@@ -428,20 +539,26 @@ function renderVehicles() {
     const spawns = filter ? state.vehicleSpawns.filter((v) => v.job_id == filter) : state.vehicleSpawns;
     const list = $('#vehicleList');
     if (!spawns.length) {
-        list.innerHTML = '<div class="empty-state">Noch keine Fahrzeugspawns erstellt.</div>';
+        list.innerHTML = emptyState('truck', 'Noch keine Fahrzeugspawns erstellt.');
         return;
     }
     list.innerHTML = spawns.map((v) => {
         const job = state.jobs.find((j) => j.id === v.job_id);
         return `
         <div class="list-item">
-            <div class="list-item-info">
-                <h4>${esc(v.label || v.model)} <span class="badge ${v.active ? 'badge-active' : 'badge-inactive'}">${v.active ? 'Aktiv' : 'Inaktiv'}</span></h4>
-                <p>${v.model} · ${esc(job?.name || '?')}</p>
+            <div class="list-item-icon">${icon('car')}</div>
+            <div class="list-item-body">
+                <div class="list-item-info">
+                    <h4>${esc(v.label || v.model)} ${badge(v.active)}</h4>
+                    <p>
+                        <span class="meta-chip">${icon('truck')} ${esc(v.model)}</span>
+                        <span class="meta-chip">${icon('clipboard')} ${esc(job?.name || '?')}</span>
+                    </p>
+                </div>
             </div>
             <div class="list-item-actions">
-                <button class="btn btn-sm btn-secondary" onclick="editVehicle(${v.id})">Bearbeiten</button>
-                <button class="btn btn-sm btn-danger" onclick="deleteVehicle(${v.id})">Löschen</button>
+                ${actionBtn('pencil', 'Bearbeiten', `editVehicle(${v.id})`)}
+                ${actionBtn('trash', 'Löschen', `deleteVehicle(${v.id})`, 'btn-danger')}
             </div>
         </div>`;
     }).join('');
@@ -451,7 +568,7 @@ $('#vehicleJobFilter').addEventListener('change', renderVehicles);
 
 $('#btnNewVehicle').addEventListener('click', () => {
     state.editing.vehicle = null;
-    $('#vehicleFormTitle').textContent = 'Neuer Fahrzeugspawn';
+    setTitle($('#vehicleFormTitle'), 'plus', 'Neuer Fahrzeugspawn');
     $('#vehicleModel').value = '';
     $('#vehicleLabel').value = '';
     ['vehicleX', 'vehicleY', 'vehicleZ', 'vehicleHeading'].forEach((id) => { $(`#${id}`).value = ''; });
@@ -482,7 +599,7 @@ window.editVehicle = (id) => {
     const v = state.vehicleSpawns.find((x) => x.id === id);
     if (!v) return;
     state.editing.vehicle = v;
-    $('#vehicleFormTitle').textContent = 'Fahrzeugspawn bearbeiten';
+    setTitle($('#vehicleFormTitle'), 'pencil', 'Fahrzeugspawn bearbeiten');
     $('#vehicleJobId').value = v.job_id;
     $('#vehicleModel').value = v.model;
     $('#vehicleLabel').value = v.label || '';
@@ -508,10 +625,10 @@ $('#payoutJobSelect').addEventListener('change', () => {
         $('#payoutForm').classList.add('hidden');
         $('#payoutPreview').classList.add('hidden');
         $('#payoutActions').classList.add('hidden');
-        $('.hint').classList.remove('hidden');
+        $('#payoutHint').classList.remove('hidden');
         return;
     }
-    $('.hint').classList.add('hidden');
+    $('#payoutHint').classList.add('hidden');
     const job = state.jobs.find((j) => j.id === id);
     const p = job?.payout || state.config.defaultPayout || {};
     $('#payBase').value = p.baseSalary || 0;
@@ -531,6 +648,10 @@ $('#payoutJobSelect').addEventListener('change', () => {
     $(`#${id}`).addEventListener('input', updatePayoutPreview);
 });
 
+function calcLine(iconName, text) {
+    return `<div class="calc-line">${icon(iconName)} ${text}</div>`;
+}
+
 function updatePayoutPreview() {
     const base = parseInt($('#payBase').value) || 0;
     const km = parseInt($('#payPerKm').value) || 0;
@@ -541,13 +662,13 @@ function updatePayoutPreview() {
     const exampleKm = 10;
     const total = base + (km * exampleKm) + delivery + time + flawless;
     $('#payoutCalc').innerHTML = `
-        Grundgehalt: ${base}$<br>
-        + ${km}$ × ${exampleKm} km = ${km * exampleKm}$<br>
-        + ${delivery}$ pro Lieferung<br>
-        + ${time}$ Zeitbonus<br>
-        + ${flawless}$ Fehlerfrei-Bonus<br>
-        + ${xp} XP<br>
-        <div class="total">Gesamt (Beispiel): ${total}$ + ${xp} XP</div>
+        ${calcLine('dollar', `Grundgehalt: ${base}$`)}
+        ${calcLine('map', `+ ${km}$ × ${exampleKm} km = ${km * exampleKm}$`)}
+        ${calcLine('package', `+ ${delivery}$ pro Lieferung`)}
+        ${calcLine('clock', `+ ${time}$ Zeitbonus`)}
+        ${calcLine('check', `+ ${flawless}$ Fehlerfrei-Bonus`)}
+        ${calcLine('star', `+ ${xp} XP`)}
+        <div class="total">${icon('dollar')} Gesamt (Beispiel): ${total}$ + ${xp} XP</div>
     `;
 }
 
