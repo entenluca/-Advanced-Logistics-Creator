@@ -1,0 +1,14 @@
+{
+    "command_help": "Opens the Advanced Logistics Creator",
+    "no_permission": "No permission for the Logistics Creator.",
+    "job_saved": "Job saved.",
+    "job_deleted": "Job deleted.",
+    "order_saved": "Order saved.",
+    "order_deleted": "Order deleted.",
+    "route_saved": "Route saved.",
+    "route_deleted": "Route deleted.",
+    "vehicle_saved": "Vehicle spawn saved.",
+    "vehicle_deleted": "Vehicle spawn deleted.",
+    "placement_hint": "Confirm position with [E], cancel with [BACKSPACE]",
+    "route_preview": "Route preview shown on map"
+}
