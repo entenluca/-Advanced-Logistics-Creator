@@ -6,220 +6,223 @@
     <title>Advanced Logistics Creator</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body data-theme="dark">
     <div id="app" class="hidden">
+        <div id="toastContainer" class="toast-container"></div>
         <div class="panel">
             <header class="header">
                 <div class="header-left">
                     <div class="icon-box" id="headerLogo"></div>
                     <div>
-                        <h1>Advanced Logistics Creator</h1>
-                        <p class="subtitle">Logistik-Jobs verwalten</p>
+                        <h1 id="uiTitle">Advanced Logistics Creator</h1>
+                        <p class="subtitle" id="uiSubtitle">Logistik-Jobs verwalten</p>
                     </div>
                 </div>
-                <button class="btn-close" id="btnClose" title="Schließen"></button>
+                <div class="header-right">
+                    <div class="search-wrap">
+                        <span class="search-icon" id="searchIcon"></span>
+                        <input type="text" id="globalSearch" placeholder="Suchen...">
+                    </div>
+                    <select id="langSelect" class="header-select" title="Sprache">
+                        <option value="de">DE</option>
+                        <option value="en">EN</option>
+                    </select>
+                    <button class="btn-icon-only" id="btnTheme" title="Theme"></button>
+                    <button class="btn-close" id="btnClose" title="Schließen"></button>
+                </div>
             </header>
 
-            <nav class="tabs">
+            <nav class="tabs" id="tabNav">
                 <button class="tab active" data-tab="jobs" data-icon="clipboard"><span>Jobs</span></button>
                 <button class="tab" data-tab="orders" data-icon="package"><span>Aufträge</span></button>
                 <button class="tab" data-tab="routes" data-icon="map"><span>Routen</span></button>
                 <button class="tab" data-tab="vehicles" data-icon="truck"><span>Fahrzeuge</span></button>
+                <button class="tab" data-tab="depots" data-icon="warehouse"><span>Depots</span></button>
+                <button class="tab" data-tab="employees" data-icon="users"><span>Mitarbeiter</span></button>
                 <button class="tab" data-tab="payout" data-icon="dollar"><span>Gehalt</span></button>
+                <button class="tab" data-tab="stats" data-icon="layers"><span>Statistik</span></button>
             </nav>
 
             <main class="content">
                 <section id="tab-jobs" class="tab-content active">
-                    <div class="toolbar">
-                        <h2 id="toolbarJobs"></h2>
-                        <button class="btn btn-primary" id="btnNewJob"></button>
-                    </div>
+                    <div class="toolbar"><h2 id="toolbarJobs"></h2><button class="btn btn-primary" id="btnNewJob"></button></div>
+                    <div class="category-chips" id="jobCategories"></div>
                     <div class="list" id="jobList"></div>
                     <div class="form-panel hidden" id="jobForm">
                         <h3 id="jobFormTitle"></h3>
                         <div class="form-grid">
-                            <label>Jobname<input type="text" id="jobName" placeholder="z.B. LS Haulage Co."></label>
-                            <label>Beschreibung<textarea id="jobDescription" rows="2" placeholder="Beschreibung des Jobs"></textarea></label>
-                            <label>Icon<select id="jobIcon" class="icon-select"></select></label>
+                            <label>Jobname<input type="text" id="jobName"></label>
+                            <label>Beschreibung<textarea id="jobDescription" rows="2"></textarea></label>
+                            <label>Icon<select id="jobIcon"></select></label>
                             <label>Mindestlevel<input type="number" id="jobMinLevel" min="0" value="0"></label>
                             <label class="checkbox-label"><input type="checkbox" id="jobFactionBound"> Fraktionsgebunden</label>
-                            <label id="factionField" class="hidden">Fraktion<input type="text" id="jobFaction" placeholder="Fraktionsname"></label>
+                            <label id="factionField" class="hidden">Fraktion<input type="text" id="jobFaction"></label>
                             <label class="checkbox-label"><input type="checkbox" id="jobActive" checked> Aktiv</label>
                         </div>
-                        <div class="form-actions">
-                            <button class="btn btn-secondary" id="btnCancelJob"></button>
-                            <button class="btn btn-primary" id="btnSaveJob"></button>
-                        </div>
+                        <div class="form-actions"><button class="btn btn-secondary" id="btnCancelJob"></button><button class="btn btn-primary" id="btnSaveJob"></button></div>
                     </div>
                 </section>
 
                 <section id="tab-orders" class="tab-content">
-                    <div class="toolbar">
-                        <h2 id="toolbarOrders"></h2>
-                        <div class="toolbar-right">
-                            <select id="orderJobFilter"><option value="">Alle Jobs</option></select>
-                            <button class="btn btn-primary" id="btnNewOrder"></button>
-                        </div>
-                    </div>
+                    <div class="toolbar"><h2 id="toolbarOrders"></h2><div class="toolbar-right"><select id="orderJobFilter"><option value="">Alle Jobs</option></select><button class="btn btn-primary" id="btnNewOrder"></button></div></div>
                     <div class="list" id="orderList"></div>
                     <div class="form-panel hidden" id="orderForm">
                         <h3 id="orderFormTitle"></h3>
                         <div class="form-grid">
                             <label>Job<select id="orderJobId"></select></label>
-                            <label>Auftragstyp<select id="orderType"></select></label>
-                            <label>Titel<input type="text" id="orderTitle" placeholder="Auftragstitel"></label>
+                            <label>Typ<select id="orderType"></select></label>
+                            <label>Titel<input type="text" id="orderTitle"></label>
                             <label>Beschreibung<textarea id="orderDescription" rows="2"></textarea></label>
-                            <div class="coords-group">
-                                <label>Startpunkt</label>
-                                <div class="coords-row">
-                                    <input type="number" id="orderStartX" placeholder="X" step="0.01">
-                                    <input type="number" id="orderStartY" placeholder="Y" step="0.01">
-                                    <input type="number" id="orderStartZ" placeholder="Z" step="0.01">
-                                    <button class="btn btn-sm btn-ghost" data-placement="orderStart" id="btnPlaceOrderStart"></button>
-                                </div>
-                            </div>
-                            <div class="coords-group">
-                                <label>Zielpunkt</label>
-                                <div class="coords-row">
-                                    <input type="number" id="orderEndX" placeholder="X" step="0.01">
-                                    <input type="number" id="orderEndY" placeholder="Y" step="0.01">
-                                    <input type="number" id="orderEndZ" placeholder="Z" step="0.01">
-                                    <button class="btn btn-sm btn-ghost" data-placement="orderEnd" id="btnPlaceOrderEnd"></button>
-                                </div>
-                            </div>
+                            <div class="coords-group"><label>Startpunkt</label><div class="coords-row"><input type="number" id="orderStartX" placeholder="X" step="0.01"><input type="number" id="orderStartY" placeholder="Y" step="0.01"><input type="number" id="orderStartZ" placeholder="Z" step="0.01"><button class="btn btn-sm btn-ghost" data-placement="orderStart" id="btnPlaceOrderStart"></button></div></div>
+                            <div class="coords-group"><label>Zielpunkt</label><div class="coords-row"><input type="number" id="orderEndX" placeholder="X" step="0.01"><input type="number" id="orderEndY" placeholder="Y" step="0.01"><input type="number" id="orderEndZ" placeholder="Z" step="0.01"><button class="btn btn-sm btn-ghost" data-placement="orderEnd" id="btnPlaceOrderEnd"></button></div></div>
                             <label>Zeitlimit (Sek.)<input type="number" id="orderTimeLimit" min="0" value="0"></label>
                             <label>Belohnung ($)<input type="number" id="orderReward" min="0" value="0"></label>
-                            <label>Bonuszahlung ($)<input type="number" id="orderBonus" min="0" value="0"></label>
-                            <label>Strafe bei Abbruch ($)<input type="number" id="orderPenalty" min="0" value="0"></label>
+                            <label>Bonus ($)<input type="number" id="orderBonus" min="0" value="0"></label>
+                            <label>Strafe ($)<input type="number" id="orderPenalty" min="0" value="0"></label>
                             <label>Cooldown (Sek.)<input type="number" id="orderCooldown" min="0" value="0"></label>
                             <label class="checkbox-label"><input type="checkbox" id="orderActive" checked> Aktiv</label>
                         </div>
-                        <div class="form-actions">
-                            <button class="btn btn-secondary" id="btnCancelOrder"></button>
-                            <button class="btn btn-primary" id="btnSaveOrder"></button>
-                        </div>
+                        <div class="form-actions"><button class="btn btn-secondary" id="btnCancelOrder"></button><button class="btn btn-primary" id="btnSaveOrder"></button></div>
                     </div>
                 </section>
 
                 <section id="tab-routes" class="tab-content">
-                    <div class="toolbar">
-                        <h2 id="toolbarRoutes"></h2>
-                        <div class="toolbar-right">
-                            <select id="routeOrderFilter"><option value="">Alle Aufträge</option></select>
-                            <button class="btn btn-primary" id="btnNewRoute"></button>
-                        </div>
-                    </div>
+                    <div class="toolbar"><h2 id="toolbarRoutes"></h2><div class="toolbar-right"><select id="routeOrderFilter"><option value="">Alle Aufträge</option></select><button class="btn btn-primary" id="btnNewRoute"></button></div></div>
                     <div class="list" id="routeList"></div>
                     <div class="form-panel hidden" id="routeForm">
                         <h3 id="routeFormTitle"></h3>
                         <div class="form-grid">
                             <label>Auftrag<select id="routeOrderId"></select></label>
-                            <label>Routenname<input type="text" id="routeName" placeholder="Route A"></label>
-                            <div class="coords-group">
-                                <label>Startpunkt</label>
-                                <div class="coords-row">
-                                    <input type="number" id="routeStartX" placeholder="X" step="0.01">
-                                    <input type="number" id="routeStartY" placeholder="Y" step="0.01">
-                                    <input type="number" id="routeStartZ" placeholder="Z" step="0.01">
-                                    <button class="btn btn-sm btn-ghost" data-placement="routeStart" id="btnPlaceRouteStart"></button>
-                                </div>
-                            </div>
-                            <div class="coords-group">
-                                <label>Zielpunkt</label>
-                                <div class="coords-row">
-                                    <input type="number" id="routeEndX" placeholder="X" step="0.01">
-                                    <input type="number" id="routeEndY" placeholder="Y" step="0.01">
-                                    <input type="number" id="routeEndZ" placeholder="Z" step="0.01">
-                                    <button class="btn btn-sm btn-ghost" data-placement="routeEnd" id="btnPlaceRouteEnd"></button>
-                                </div>
-                            </div>
+                            <label>Name<input type="text" id="routeName"></label>
+                            <div class="coords-group"><label>Start</label><div class="coords-row"><input type="number" id="routeStartX" step="0.01"><input type="number" id="routeStartY" step="0.01"><input type="number" id="routeStartZ" step="0.01"><button class="btn btn-sm btn-ghost" data-placement="routeStart"></button></div></div>
+                            <div class="coords-group"><label>Ziel</label><div class="coords-row"><input type="number" id="routeEndX" step="0.01"><input type="number" id="routeEndY" step="0.01"><input type="number" id="routeEndZ" step="0.01"><button class="btn btn-sm btn-ghost" data-placement="routeEnd"></button></div></div>
                             <label>Schwierigkeit<select id="routeDifficulty"></select></label>
                             <label>Distanz (km)<input type="number" id="routeDistance" min="0" step="0.1" value="0"></label>
-                            <label>Geschätzte Fahrzeit (Min.)<input type="number" id="routeEstTime" min="0" value="0"></label>
-                            <label class="checkbox-label"><input type="checkbox" id="routeGps" checked> GPS-Navigation</label>
-                            <label class="checkbox-label"><input type="checkbox" id="routeRandom"> Zufällige Auswahl</label>
-                            <label class="checkbox-label"><input type="checkbox" id="routeShowWp" checked> Wegpunkte anzeigen</label>
+                            <label>Fahrzeit (Min.)<input type="number" id="routeEstTime" min="0" value="0"></label>
+                            <label class="checkbox-label"><input type="checkbox" id="routeGps" checked> GPS</label>
+                            <label class="checkbox-label"><input type="checkbox" id="routeRandom"> Zufällig</label>
+                            <label class="checkbox-label"><input type="checkbox" id="routeShowWp" checked> Wegpunkte</label>
                             <label class="checkbox-label"><input type="checkbox" id="routeActive" checked> Aktiv</label>
                         </div>
-                        <div class="waypoints-section">
-                            <div class="toolbar">
-                                <h4 id="waypointsTitle"></h4>
-                                <button class="btn btn-sm btn-secondary" id="btnAddWaypoint"></button>
-                            </div>
-                            <div id="waypointList"></div>
-                        </div>
-                        <div class="form-actions">
-                            <button class="btn btn-secondary" id="btnPreviewRoute"></button>
-                            <button class="btn btn-secondary" id="btnCancelRoute"></button>
-                            <button class="btn btn-primary" id="btnSaveRoute"></button>
-                        </div>
+                        <div class="waypoints-section"><div class="toolbar"><h4 id="waypointsTitle"></h4><button class="btn btn-sm btn-secondary" id="btnAddWaypoint"></button></div><div id="waypointList" class="dnd-list"></div></div>
+                        <div class="form-actions"><button class="btn btn-secondary" id="btnPreviewRoute"></button><button class="btn btn-secondary" id="btnCancelRoute"></button><button class="btn btn-primary" id="btnSaveRoute"></button></div>
                     </div>
                 </section>
 
                 <section id="tab-vehicles" class="tab-content">
-                    <div class="toolbar">
-                        <h2 id="toolbarVehicles"></h2>
-                        <div class="toolbar-right">
-                            <select id="vehicleJobFilter"><option value="">Alle Jobs</option></select>
-                            <button class="btn btn-primary" id="btnNewVehicle"></button>
-                        </div>
-                    </div>
+                    <div class="toolbar"><h2 id="toolbarVehicles"></h2><div class="toolbar-right"><select id="vehicleJobFilter"><option value="">Alle Jobs</option></select><select id="vehicleTypeFilter"><option value="">Alle Typen</option></select><button class="btn btn-primary" id="btnNewVehicle"></button></div></div>
                     <div class="list" id="vehicleList"></div>
                     <div class="form-panel hidden" id="vehicleForm">
                         <h3 id="vehicleFormTitle"></h3>
                         <div class="form-grid">
                             <label>Job<select id="vehicleJobId"></select></label>
-                            <label>Fahrzeugmodell<input type="text" id="vehicleModel" placeholder="z.B. phantom"></label>
-                            <label>Bezeichnung<input type="text" id="vehicleLabel" placeholder="Anzeigename"></label>
-                            <div class="coords-group">
-                                <label>Spawn-Position</label>
-                                <div class="coords-row">
-                                    <input type="number" id="vehicleX" placeholder="X" step="0.01">
-                                    <input type="number" id="vehicleY" placeholder="Y" step="0.01">
-                                    <input type="number" id="vehicleZ" placeholder="Z" step="0.01">
-                                    <input type="number" id="vehicleHeading" placeholder="Heading" step="0.01">
-                                    <button class="btn btn-sm btn-ghost" data-placement="vehicle" id="btnPlaceVehicle"></button>
-                                </div>
-                            </div>
+                            <label id="lblVehicleType">Fahrzeugtyp<select id="vehicleType"></select></label>
+                            <label>Modell<input type="text" id="vehicleModel" placeholder="phantom"></label>
+                            <label>Bezeichnung<input type="text" id="vehicleLabel"></label>
+                            <label id="lblPlate">Kennzeichen<input type="text" id="vehiclePlate" maxlength="8"></label>
+                            <label id="lblFuel">Tankfüllstand (%)<input type="number" id="vehicleFuel" min="0" max="100" value="100"></label>
+                            <label id="lblHealth">Fahrzeugzustand<input type="number" id="vehicleHealth" min="0" max="1000" value="1000"></label>
+                            <label id="lblMaxSpeed">Maximalgeschwindigkeit<input type="number" id="vehicleMaxSpeed" min="0" value="0"></label>
+                            <label class="checkbox-label"><input type="checkbox" id="vehicleRental"> Mietfahrzeug</label>
+                            <div class="coords-group"><label>Spawn</label><div class="coords-row"><input type="number" id="vehicleX" step="0.01"><input type="number" id="vehicleY" step="0.01"><input type="number" id="vehicleZ" step="0.01"><input type="number" id="vehicleHeading" step="0.01"><button class="btn btn-sm btn-ghost" data-placement="vehicle" id="btnPlaceVehicle"></button></div></div>
                             <label>Livery<input type="number" id="vehicleLivery" value="-1"></label>
                             <label class="checkbox-label"><input type="checkbox" id="vehicleActive" checked> Aktiv</label>
                         </div>
-                        <div class="form-actions">
-                            <button class="btn btn-secondary" id="btnCancelVehicle"></button>
-                            <button class="btn btn-primary" id="btnSaveVehicle"></button>
+                        <div class="form-actions"><button class="btn btn-secondary" id="btnCancelVehicle"></button><button class="btn btn-primary" id="btnSaveVehicle"></button></div>
+                    </div>
+                </section>
+
+                <section id="tab-depots" class="tab-content">
+                    <div class="toolbar"><h2 id="toolbarDepots"></h2><div class="toolbar-right"><select id="depotJobFilter"><option value="">Alle Jobs</option></select><select id="depotTypeFilter"><option value="">Alle Typen</option></select><button class="btn btn-primary" id="btnNewDepot"></button></div></div>
+                    <div class="list" id="depotList"></div>
+                    <div class="form-panel hidden" id="depotForm">
+                        <h3 id="depotFormTitle"></h3>
+                        <div class="form-grid">
+                            <label>Job<select id="depotJobId"></select></label>
+                            <label>Typ<select id="depotType"></select></label>
+                            <label>Name<input type="text" id="depotName"></label>
+                            <div class="coords-group"><label>Position</label><div class="coords-row"><input type="number" id="depotX" step="0.01"><input type="number" id="depotY" step="0.01"><input type="number" id="depotZ" step="0.01"><input type="number" id="depotHeading" step="0.01"><button class="btn btn-sm btn-ghost" data-placement="depot"></button></div></div>
+                            <label class="checkbox-label"><input type="checkbox" id="depotBlipEnabled" checked> Blip</label>
+                            <label>Blip-Sprite<input type="number" id="depotBlipSprite" value="473"></label>
+                            <label>Blip-Farbe<input type="number" id="depotBlipColor" value="3"></label>
+                            <label class="checkbox-label"><input type="checkbox" id="depotMarkerEnabled" checked> Marker</label>
+                            <label>Marker-Größe<input type="number" id="depotMarkerSize" step="0.1" value="1.5"></label>
+                            <label class="checkbox-label"><input type="checkbox" id="depotNpcEnabled"> NPC</label>
+                            <label>NPC-Modell<input type="text" id="depotNpcModel" value="s_m_m_trucker_01"></label>
+                            <label class="checkbox-label"><input type="checkbox" id="depotTeleportEnabled"> Teleport</label>
+                            <div class="coords-group"><label>Teleport-Ziel</label><div class="coords-row"><input type="number" id="depotTpX" step="0.01"><input type="number" id="depotTpY" step="0.01"><input type="number" id="depotTpZ" step="0.01"><button class="btn btn-sm btn-ghost" data-placement="depotTeleport"></button></div></div>
+                            <label class="checkbox-label"><input type="checkbox" id="depotActive" checked> Aktiv</label>
                         </div>
+                        <div class="form-actions"><button class="btn btn-secondary" id="btnPreviewDepot"></button><button class="btn btn-secondary" id="btnCancelDepot"></button><button class="btn btn-primary" id="btnSaveDepot"></button></div>
+                    </div>
+                </section>
+
+                <section id="tab-employees" class="tab-content">
+                    <div class="toolbar"><h2 id="toolbarEmployees"></h2><div class="toolbar-right"><select id="employeeJobFilter"><option value="">Alle Jobs</option></select><button class="btn btn-primary" id="btnHireEmployee"></button></div></div>
+                    <div class="list" id="employeeList"></div>
+                    <div class="form-panel hidden" id="hireForm">
+                        <h3 id="hireFormTitle"></h3>
+                        <div class="form-grid">
+                            <label>Job<select id="hireJobId"></select></label>
+                            <label>Spieler<select id="hirePlayerId"></select></label>
+                            <label>Rang<select id="hireRankId"></select></label>
+                        </div>
+                        <div class="form-actions"><button class="btn btn-secondary" id="btnCancelHire"></button><button class="btn btn-primary" id="btnConfirmHire"></button></div>
+                    </div>
+                    <div class="form-panel hidden" id="employeeDetail">
+                        <h3 id="employeeDetailTitle"></h3>
+                        <div id="employeeStats" class="stats-grid"></div>
+                        <div class="form-grid">
+                            <label>Rang<select id="empRankId"></select></label>
+                            <label>Level<input type="number" id="empDriverLevel" min="1" value="1"></label>
+                        </div>
+                        <h4 id="empHistoryTitle"></h4>
+                        <div class="list" id="employeeHistory"></div>
+                        <div class="form-actions">
+                            <button class="btn btn-secondary" id="btnSaveEmployee"></button>
+                            <button class="btn btn-danger" id="btnFireEmployee"></button>
+                            <button class="btn btn-secondary" id="btnCloseEmployee"></button>
+                        </div>
+                    </div>
+                    <div class="form-panel" id="announcementPanel">
+                        <h4 id="announceTitle"></h4>
+                        <div class="form-grid"><label>Job<select id="announceJobId"></select></label><label>Nachricht<textarea id="announceMessage" rows="2"></textarea></label></div>
+                        <button class="btn btn-primary" id="btnSendAnnounce"></button>
                     </div>
                 </section>
 
                 <section id="tab-payout" class="tab-content">
-                    <div class="toolbar">
-                        <h2 id="toolbarPayout"></h2>
-                        <select id="payoutJobSelect"><option value="">Job auswählen...</option></select>
-                    </div>
+                    <div class="toolbar"><h2 id="toolbarPayout"></h2><select id="payoutJobSelect"><option value="">Job auswählen...</option></select></div>
                     <div id="payoutPanel" class="form-panel">
                         <p class="hint" id="payoutHint"></p>
                         <div class="form-grid hidden" id="payoutForm">
                             <label>Grundgehalt ($)<input type="number" id="payBase" min="0" value="500"></label>
-                            <label>Auszahlung pro KM ($)<input type="number" id="payPerKm" min="0" value="25"></label>
-                            <label>Auszahlung pro Lieferung ($)<input type="number" id="payPerDelivery" min="0" value="100"></label>
+                            <label>Pro KM ($)<input type="number" id="payPerKm" min="0" value="25"></label>
+                            <label>Pro Lieferung ($)<input type="number" id="payPerDelivery" min="0" value="100"></label>
                             <label>Zeitbonus ($)<input type="number" id="payTimeBonus" min="0" value="100"></label>
-                            <label>Fehlerfrei-Bonus ($)<input type="number" id="payFlawless" min="0" value="50"></label>
-                            <label>Schwere-Aufträge Bonus ($)<input type="number" id="payDifficulty" min="0" value="75"></label>
-                            <label>XP-Belohnung<input type="number" id="payXp" min="0" value="50"></label>
+                            <label>Fehlerfrei ($)<input type="number" id="payFlawless" min="0" value="50"></label>
+                            <label>Schwere ($)<input type="number" id="payDifficulty" min="0" value="75"></label>
+                            <label>XP<input type="number" id="payXp" min="0" value="50"></label>
                         </div>
-                        <div class="payout-preview hidden" id="payoutPreview">
-                            <h4 id="payoutPreviewTitle"></h4>
-                            <div class="preview-calc" id="payoutCalc"></div>
-                        </div>
-                        <div class="form-actions hidden" id="payoutActions">
-                            <button class="btn btn-primary" id="btnSavePayout"></button>
-                        </div>
+                        <div class="payout-preview hidden" id="payoutPreview"><h4 id="payoutPreviewTitle"></h4><div class="preview-calc" id="payoutCalc"></div></div>
+                        <div class="form-actions hidden" id="payoutActions"><button class="btn btn-primary" id="btnSavePayout"></button></div>
                     </div>
+                </section>
+
+                <section id="tab-stats" class="tab-content">
+                    <div class="toolbar"><h2 id="toolbarStats"></h2><select id="statsJobFilter"><option value="">Global</option></select></div>
+                    <div class="stats-grid" id="statsOverview"></div>
+                    <h3 id="topDriversTitle" class="section-title"></h3>
+                    <div class="list" id="topDriversList"></div>
+                    <h3 id="companyStatsTitle" class="section-title"></h3>
+                    <div class="list" id="companyStatsList"></div>
                 </section>
             </main>
         </div>
     </div>
     <script src="js/icons.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/dnd.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

@@ -81,6 +81,30 @@ function Creator.ValidateVehicleSpawn(data)
     if not ok then return false, 'invalid_coords' end
     data.coords = coords
     data.heading = clamp(data.heading, 0, 360)
+    data.fuel_level = clamp(data.fuel_level, 0, 100)
+    data.vehicle_health = clamp(data.vehicle_health, 0, 1000)
+    data.max_speed = clamp(data.max_speed, 0, 500)
+    if data.plate and #data.plate > Config.Limits.maxPlateLength then
+        data.plate = data.plate:sub(1, Config.Limits.maxPlateLength)
+    end
+    return true, data
+end
+
+function Creator.ValidateDepot(data)
+    if not data.job_id or not data.name or data.name == '' then return false, 'invalid_depot' end
+    local ok, coords = validateCoords(data.coords)
+    if not ok then return false, 'invalid_coords' end
+    data.coords = coords
+    data.heading = clamp(data.heading, 0, 360)
+    data.marker_size = clamp(data.marker_size or 1.5, 0.5, 10)
+    if data.npc_coords then
+        local okNpc, npcCoords = validateCoords(data.npc_coords)
+        data.npc_coords = okNpc and npcCoords or nil
+    end
+    if data.teleport_coords then
+        local okTp, tpCoords = validateCoords(data.teleport_coords)
+        data.teleport_coords = okTp and tpCoords or nil
+    end
     return true, data
 end
 
@@ -175,6 +199,27 @@ lib.callback.register('alc:server:deleteVehicleSpawn', function(source, spawnId)
     return { success = true }
 end)
 
+lib.callback.register('alc:server:saveDepot', function(source, data, depotId)
+    if not requireAdmin(source) then return { success = false, error = 'no_permission' } end
+    local ok, validated = Creator.ValidateDepot(data)
+    if not ok then return { success = false, error = validated } end
+
+    if depotId then
+        Database.UpdateDepot(depotId, validated)
+        return { success = true, id = depotId }
+    end
+
+    local id, err = Database.CreateDepot(validated)
+    if not id then return { success = false, error = err } end
+    return { success = true, id = id }
+end)
+
+lib.callback.register('alc:server:deleteDepot', function(source, depotId)
+    if not requireAdmin(source) then return { success = false } end
+    Database.DeleteDepot(depotId)
+    return { success = true }
+end)
+
 -- Exports for other resources
 
 exports('GetJobs', function() return Database.GetJobs() end)
@@ -189,3 +234,13 @@ end)
 exports('GetOrders', function(jobId) return Database.GetOrders(jobId) end)
 exports('GetRoutes', function(orderId) return Database.GetRoutes(orderId) end)
 exports('GetVehicleSpawns', function(jobId) return Database.GetVehicleSpawns(jobId) end)
+exports('GetDepots', function(jobId) return Database.GetDepots(jobId) end)
+
+lib.callback.register('alc:server:getDepotsPublic', function()
+    local depots = Database.GetDepots()
+    local active = {}
+    for _, d in ipairs(depots) do
+        if d.active then active[#active + 1] = d end
+    end
+    return active
+end)

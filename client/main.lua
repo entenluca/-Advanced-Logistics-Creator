@@ -58,6 +58,56 @@ RegisterNUICallback('deleteVehicleSpawn', function(payload, cb)
     cb(result or { success = false })
 end)
 
+RegisterNUICallback('saveDepot', function(payload, cb)
+    local result = lib.callback.await('alc:server:saveDepot', false, payload.data, payload.id)
+    cb(result or { success = false })
+end)
+
+RegisterNUICallback('deleteDepot', function(payload, cb)
+    local result = lib.callback.await('alc:server:deleteDepot', false, payload.id)
+    cb(result or { success = false })
+end)
+
+RegisterNUICallback('hireEmployee', function(payload, cb)
+    local result = lib.callback.await('alc:server:hireEmployee', false, payload.data)
+    cb(result or { success = false })
+end)
+
+RegisterNUICallback('fireEmployee', function(payload, cb)
+    local result = lib.callback.await('alc:server:fireEmployee', false, payload.id)
+    cb(result or { success = false })
+end)
+
+RegisterNUICallback('deleteEmployee', function(payload, cb)
+    local result = lib.callback.await('alc:server:deleteEmployee', false, payload.id)
+    cb(result or { success = false })
+end)
+
+RegisterNUICallback('updateEmployee', function(payload, cb)
+    local result = lib.callback.await('alc:server:updateEmployee', false, payload.id, payload.data)
+    cb(result or { success = false })
+end)
+
+RegisterNUICallback('getEmployeeHistory', function(payload, cb)
+    local result = lib.callback.await('alc:server:getEmployeeHistory', false, payload.identifier, payload.jobId)
+    cb(result or {})
+end)
+
+RegisterNUICallback('getOnlinePlayers', function(_, cb)
+    local result = lib.callback.await('alc:server:getOnlinePlayers', false)
+    cb(result or {})
+end)
+
+RegisterNUICallback('getStatistics', function(_, cb)
+    local result = lib.callback.await('alc:server:getStatistics', false)
+    cb(result or {})
+end)
+
+RegisterNUICallback('sendAnnouncement', function(payload, cb)
+    local result = lib.callback.await('alc:server:sendAnnouncement', false, payload.jobId, payload.message)
+    cb(result or { success = false })
+end)
+
 RegisterNUICallback('getPlayerCoords', function(_, cb)
     local ped = PlayerPedId()
     local coords = GetEntityCoords(ped)

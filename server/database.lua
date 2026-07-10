@@ -12,12 +12,16 @@ local function encodeJson(val)
 end
 
 function Database.Init()
-    local sql = LoadResourceFile(GetCurrentResourceName(), 'sql/install.sql')
-    if not sql then return end
-    for statement in sql:gmatch('[^;]+') do
-        local trimmed = statement:match('^%s*(.-)%s*$')
-        if trimmed and trimmed ~= '' then
-            MySQL.query.await(trimmed)
+    local res = GetCurrentResourceName()
+    for _, file in ipairs({ 'sql/install.sql', 'sql/migrate_v2.sql' }) do
+        local sql = LoadResourceFile(res, file)
+        if sql then
+            for statement in sql:gmatch('[^;]+') do
+                local trimmed = statement:match('^%s*(.-)%s*$')
+                if trimmed and trimmed ~= '' then
+                    pcall(function() MySQL.query.await(trimmed) end)
+                end
+            end
         end
     end
 end
@@ -269,12 +273,25 @@ end
 
 -- Vehicle spawns
 
+local function decodeVehicleSpawn(row)
+    row.coords = decodeJson(row.coords, {})
+    row.active = row.active == 1
+    row.is_rental = row.is_rental == 1
+    row.fuel_level = row.fuel_level or 100
+    row.vehicle_health = row.vehicle_health or 1000
+    row.max_speed = row.max_speed or 0
+    row.vehicle_type = row.vehicle_type or 'transporter'
+    return row
+end
+
 function Database.GetVehicleSpawns(jobId)
-    local rows = MySQL.query.await('SELECT * FROM alc_vehicle_spawns WHERE job_id = ? ORDER BY id ASC', { jobId }) or {}
-    for _, row in ipairs(rows) do
-        row.coords = decodeJson(row.coords, {})
-        row.active = row.active == 1
+    local rows
+    if jobId then
+        rows = MySQL.query.await('SELECT * FROM alc_vehicle_spawns WHERE job_id = ? ORDER BY id ASC', { jobId }) or {}
+    else
+        rows = MySQL.query.await('SELECT * FROM alc_vehicle_spawns ORDER BY id ASC') or {}
     end
+    for i, row in ipairs(rows) do rows[i] = decodeVehicleSpawn(row) end
     return rows
 end
 
@@ -283,15 +300,22 @@ function Database.CreateVehicleSpawn(data)
     if count >= Config.Limits.maxVehicleSpawnsPerJob then return nil, 'max_spawns' end
 
     local id = MySQL.insert.await([[
-        INSERT INTO alc_vehicle_spawns (job_id, model, label, coords, heading, livery, active)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO alc_vehicle_spawns (job_id, model, label, vehicle_type, coords, heading, livery,
+            plate, fuel_level, vehicle_health, max_speed, is_rental, active)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ]], {
         data.job_id,
         data.model,
         data.label or data.model,
+        data.vehicle_type or 'transporter',
         encodeJson(data.coords),
         data.heading or 0,
         data.livery or -1,
+        data.plate,
+        data.fuel_level or 100,
+        data.vehicle_health or 1000,
+        data.max_speed or 0,
+        data.is_rental and 1 or 0,
         data.active ~= false and 1 or 0,
     })
     return id
@@ -299,14 +323,21 @@ end
 
 function Database.UpdateVehicleSpawn(id, data)
     MySQL.update.await([[
-        UPDATE alc_vehicle_spawns SET model = ?, label = ?, coords = ?, heading = ?, livery = ?, active = ?
+        UPDATE alc_vehicle_spawns SET model = ?, label = ?, vehicle_type = ?, coords = ?, heading = ?,
+            livery = ?, plate = ?, fuel_level = ?, vehicle_health = ?, max_speed = ?, is_rental = ?, active = ?
         WHERE id = ?
     ]], {
         data.model,
         data.label or data.model,
+        data.vehicle_type or 'transporter',
         encodeJson(data.coords),
         data.heading or 0,
         data.livery or -1,
+        data.plate,
+        data.fuel_level or 100,
+        data.vehicle_health or 1000,
+        data.max_speed or 0,
+        data.is_rental and 1 or 0,
         data.active ~= false and 1 or 0,
         id,
     })
@@ -318,30 +349,108 @@ function Database.DeleteVehicleSpawn(id)
     return true
 end
 
+-- Depots
+
+local function decodeDepot(row)
+    row.coords = decodeJson(row.coords, {})
+    row.npc_coords = decodeJson(row.npc_coords, nil)
+    row.teleport_coords = decodeJson(row.teleport_coords, nil)
+    row.blip_enabled = row.blip_enabled == 1
+    row.marker_enabled = row.marker_enabled == 1
+    row.npc_enabled = row.npc_enabled == 1
+    row.teleport_enabled = row.teleport_enabled == 1
+    row.active = row.active == 1
+    return row
+end
+
+function Database.GetDepots(jobId)
+    local rows
+    if jobId then
+        rows = MySQL.query.await('SELECT * FROM alc_depots WHERE job_id = ? ORDER BY id ASC', { jobId }) or {}
+    else
+        rows = MySQL.query.await('SELECT * FROM alc_depots ORDER BY id ASC') or {}
+    end
+    for i, row in ipairs(rows) do rows[i] = decodeDepot(row) end
+    return rows
+end
+
+function Database.CreateDepot(data)
+    local count = MySQL.scalar.await('SELECT COUNT(*) FROM alc_depots WHERE job_id = ?', { data.job_id }) or 0
+    if count >= Config.Limits.maxDepotsPerJob then return nil, 'max_depots' end
+
+    local id = MySQL.insert.await([[
+        INSERT INTO alc_depots (job_id, name, depot_type, coords, heading, blip_enabled, blip_sprite,
+            blip_color, blip_label, marker_enabled, marker_type, marker_size, npc_enabled, npc_model,
+            npc_coords, teleport_enabled, teleport_coords, active)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ]], {
+        data.job_id, data.name, data.depot_type or 'logistics_center',
+        encodeJson(data.coords), data.heading or 0,
+        data.blip_enabled ~= false and 1 or 0, data.blip_sprite or 473, data.blip_color or 3,
+        data.blip_label or data.name, data.marker_enabled ~= false and 1 or 0,
+        data.marker_type or 1, data.marker_size or 1.5,
+        data.npc_enabled and 1 or 0, data.npc_model or 's_m_m_trucker_01',
+        data.npc_coords and encodeJson(data.npc_coords) or nil,
+        data.teleport_enabled and 1 or 0,
+        data.teleport_coords and encodeJson(data.teleport_coords) or nil,
+        data.active ~= false and 1 or 0,
+    })
+    TriggerClientEvent('alc:client:refreshDepots', -1)
+    return id
+end
+
+function Database.UpdateDepot(id, data)
+    MySQL.update.await([[
+        UPDATE alc_depots SET job_id = ?, name = ?, depot_type = ?, coords = ?, heading = ?,
+            blip_enabled = ?, blip_sprite = ?, blip_color = ?, blip_label = ?,
+            marker_enabled = ?, marker_type = ?, marker_size = ?,
+            npc_enabled = ?, npc_model = ?, npc_coords = ?,
+            teleport_enabled = ?, teleport_coords = ?, active = ?
+        WHERE id = ?
+    ]], {
+        data.job_id, data.name, data.depot_type or 'logistics_center',
+        encodeJson(data.coords), data.heading or 0,
+        data.blip_enabled ~= false and 1 or 0, data.blip_sprite or 473, data.blip_color or 3,
+        data.blip_label or data.name, data.marker_enabled ~= false and 1 or 0,
+        data.marker_type or 1, data.marker_size or 1.5,
+        data.npc_enabled and 1 or 0, data.npc_model or 's_m_m_trucker_01',
+        data.npc_coords and encodeJson(data.npc_coords) or nil,
+        data.teleport_enabled and 1 or 0,
+        data.teleport_coords and encodeJson(data.teleport_coords) or nil,
+        data.active ~= false and 1 or 0, id,
+    })
+    TriggerClientEvent('alc:client:refreshDepots', -1)
+    return true
+end
+
+function Database.DeleteDepot(id)
+    MySQL.update.await('DELETE FROM alc_depots WHERE id = ?', { id })
+    TriggerClientEvent('alc:client:refreshDepots', -1)
+    return true
+end
+
 -- Full export for NUI
 
 function Database.GetFullData()
-    local jobs = Database.GetJobs()
-    local orders = Database.GetOrders()
-    local routes = Database.GetRoutes()
-    local spawns = MySQL.query.await('SELECT * FROM alc_vehicle_spawns ORDER BY id ASC') or {}
-
-    for _, s in ipairs(spawns) do
-        s.coords = decodeJson(s.coords, {})
-        s.active = s.active == 1
-    end
-
     return {
-        jobs = jobs,
-        orders = orders,
-        routes = routes,
-        vehicleSpawns = spawns,
+        jobs = Database.GetJobs(),
+        orders = Database.GetOrders(),
+        routes = Database.GetRoutes(),
+        vehicleSpawns = Database.GetVehicleSpawns(),
+        depots = Database.GetDepots(),
+        employees = Employees.GetAll(),
+        statistics = Statistics.GetGlobalStats(),
         config = {
             orderTypes = Config.OrderTypes,
             difficulties = Config.RouteDifficulties,
             icons = Config.JobIcons,
+            vehicleTypes = Config.VehicleTypes,
+            depotTypes = Config.DepotTypes,
+            employeeRanks = Config.EmployeeRanks,
+            notificationTypes = Config.NotificationTypes,
             defaultPayout = Config.DefaultPayout,
             limits = Config.Limits,
+            defaultLocale = Config.DefaultLocale,
         },
     }
 end
