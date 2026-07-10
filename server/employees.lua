@@ -76,7 +76,7 @@ end
 
 lib.callback.register('alc:server:hireEmployee', function(source, data)
     if not Database.IsAdmin(source) then return { success = false } end
-    if not data.job_id or not data.identifier then return { success = false, error = 'invalid' end
+    if not data.job_id or not data.identifier then return { success = false, error = 'invalid' } end
     local id, err = Employees.Hire(data.job_id, data.identifier, data.player_name, data.rank_id)
     if not id then return { success = false, error = err } end
     Notifications.BroadcastJob(data.job_id, 'announcement', ('%s wurde eingestellt.'):format(data.player_name or 'Mitarbeiter'))
